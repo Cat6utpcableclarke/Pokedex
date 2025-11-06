@@ -4,40 +4,59 @@ import {
   ViroText,
   ViroTrackingReason,
   ViroTrackingStateConstants,
+  ViroARTrackingTargets,
+  ViroARImageMarker,
+  Viro3DObject,
 } from "@reactvision/react-viro";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 
-
 export default function PokemonARScene() {
-      const [text, setText] = useState("Initializing AR...");
+  const [text, setText] = useState("Initializing AR...");
 
-  function onInitialized(state: any, reason: ViroTrackingReason) {
-    console.log("onInitialized", state, reason);
+  useEffect(() => {
+    // create targets once before scene uses them
+    ViroARTrackingTargets.createTargets({
+      pokemon_target: {
+        source: {
+          uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png`,
+        },
+        orientation: "Up",
+        physicalWidth: 0.1, // real world width in meters
+      },
+    });
+  }, []);
+
+  function onInitialized(state: any) {
     if (state === ViroTrackingStateConstants.TRACKING_NORMAL) {
-      setText("Hello World!");
+      setText("Tracking OK");
     } else if (state === ViroTrackingStateConstants.TRACKING_UNAVAILABLE) {
-      // Handle loss of tracking
+      setText("Tracking unavailable");
     }
   }
-return (
+
+  return (
     <ViroARScene onTrackingUpdated={onInitialized}>
-      <ViroText
-        text={text}
-        scale={[0.5, 0.5, 0.5]}
-        position={[0, 0, -1]}
-        style={styles.helloWorldTextStyle}
-      />
+      <ViroARImageMarker target={"pokemon_target"}>
+        <Viro3DObject
+          type={"GLB"}
+          source={{
+            uri: "https://raw.githubusercontent.com/Sudhanshu-Ambastha/Pokemon-3D-api/main/models/opt/regular/1.glb",
+          }}
+          position={[0, 0, -1]}
+          scale={[0.9, 0.9, 0.9]}
+        />
+      </ViroARImageMarker>
+      {/* optional debug text */}
     </ViroARScene>
   );
 }
-var styles = StyleSheet.create({
-  f1: { flex: 1 },
+
+const styles = StyleSheet.create({
   helloWorldTextStyle: {
     fontFamily: "Arial",
     fontSize: 30,
     color: "#ffffff",
-    textAlignVertical: "center",
     textAlign: "center",
   },
 });
